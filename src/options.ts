@@ -151,10 +151,7 @@ export class DeepSeekOptions {
   model: string
   tokenLimits: TokenLimits
 
-  constructor(
-    model = 'deepseek-chat',
-    tokenLimits: TokenLimits | null = null
-  ) {
+  constructor(model = 'deepseek-chat', tokenLimits: TokenLimits | null = null) {
     this.model = model
     if (tokenLimits != null) {
       this.tokenLimits = tokenLimits

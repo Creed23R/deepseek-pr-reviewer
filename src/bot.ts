@@ -85,15 +85,20 @@ export class Bot {
             }
           }
         ]
-        params.tool_choice = {type: 'function', function: {name: jsonSchema.name}}
+        params.tool_choice = {
+          type: 'function',
+          function: {name: jsonSchema.name}
+        }
       }
 
       const response = await pRetry(
         () => this.client.chat.completions.create(params),
         {
           retries: this.options.deepseekRetries,
-          onFailedAttempt: async (error) => {
-            info(`Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`)
+          onFailedAttempt: async error => {
+            info(
+              `Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`
+            )
           }
         }
       )

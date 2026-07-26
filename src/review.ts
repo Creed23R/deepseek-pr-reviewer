@@ -365,7 +365,9 @@ ${
       }
     } catch (e: any) {
       warning(`summarize: error from DeepSeek: ${e as string}`)
-      summariesFailed.push(`${filename} (error from DeepSeek: ${e as string})})`)
+      summariesFailed.push(
+        `${filename} (error from DeepSeek: ${e as string})})`
+      )
       return null
     }
   }
