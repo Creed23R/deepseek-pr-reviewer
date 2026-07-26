@@ -1,16 +1,8 @@
-import {
-  BedrockRuntimeClient,
-  ConversationRole,
-  ConverseCommand,
-  ConverseCommandInput,
-  ConverseCommandOutput,
-  ToolConfiguration
-} from '@aws-sdk/client-bedrock-runtime'
 import {info, warning} from '@actions/core'
+import OpenAI from 'openai'
 import pRetry from 'p-retry'
-import {BedrockOptions, Options} from './options'
+import {DeepSeekOptions, Options} from './options'
 
-// define type to save parentMessageId and conversationId
 export interface Ids {
   parentMessageId?: string
   conversationId?: string
@@ -23,15 +15,18 @@ export interface JsonSchema {
 }
 
 export class Bot {
-  private readonly client: BedrockRuntimeClient
+  private readonly client: OpenAI
 
   private readonly options: Options
-  private readonly bedrockOptions: BedrockOptions
+  private readonly deepseekOptions: DeepSeekOptions
 
-  constructor(options: Options, bedrockOptions: BedrockOptions) {
+  constructor(options: Options, deepseekOptions: DeepSeekOptions) {
     this.options = options
-    this.bedrockOptions = bedrockOptions
-    this.client = new BedrockRuntimeClient({})
+    this.deepseekOptions = deepseekOptions
+    this.client = new OpenAI({
+      apiKey: process.env.DEEPSEEK_API_KEY,
+      baseURL: 'https://api.deepseek.com'
+    })
   }
 
   chat = async (
@@ -52,14 +47,12 @@ export class Bot {
     message: string,
     jsonSchema?: JsonSchema
   ): Promise<[string, Ids]> => {
-    // record timing
     const start = Date.now()
     if (!message) {
       return ['', {}]
     }
 
-    let response: ConverseCommandOutput | undefined
-
+    // Prepend language instruction
     message = `IMPORTANT: Entire response must be in the language with ISO code: ${this.options.language}\n\n${message}`
 
     if (this.options.debug) {
@@ -69,84 +62,64 @@ export class Bot {
       }
     }
 
+    let responseText = ''
+    const newIds: Ids = {}
+
     try {
-      const commandParams: ConverseCommandInput = {
-        modelId: this.bedrockOptions.model,
-        messages: [
-          {
-            role: 'user' as ConversationRole,
-            content: [
-              {
-                text: message
-              }
-            ]
-          }
-        ],
-        inferenceConfig: {
-          maxTokens: 4096,
-          temperature: 0
-        }
+      const params: OpenAI.ChatCompletionCreateParamsNonStreaming = {
+        model: this.deepseekOptions.model,
+        messages: [{role: 'user', content: message}],
+        temperature: this.options.deepseekModelTemperature,
+        max_tokens: 4096
       }
 
-      // Add tool configuration if jsonSchema is provided
+      // If jsonSchema is provided, use function calling
       if (jsonSchema) {
-        const toolConfig: ToolConfiguration = {
-          tools: [
-            {
-              toolSpec: {
-                name: jsonSchema.name,
-                description: jsonSchema.description,
-                inputSchema: {
-                  json: jsonSchema.parameters
-                }
-              }
+        params.tools = [
+          {
+            type: 'function',
+            function: {
+              name: jsonSchema.name,
+              description: jsonSchema.description,
+              parameters: jsonSchema.parameters
             }
-          ]
-        }
-        commandParams.toolConfig = toolConfig
+          }
+        ]
+        params.tool_choice = {type: 'function', function: {name: jsonSchema.name}}
       }
 
-      response = await pRetry(
-        () => this.client.send(new ConverseCommand(commandParams)),
+      const response = await pRetry(
+        () => this.client.chat.completions.create(params),
         {
-          retries: this.options.bedrockRetries
+          retries: this.options.deepseekRetries,
+          onFailedAttempt: async (error) => {
+            info(`Attempt ${error.attemptNumber} failed. ${error.retriesLeft} retries left.`)
+          }
         }
       )
+
+      const choice = response.choices[0]
+      if (choice?.message?.content) {
+        responseText = choice.message.content
+      } else if (choice?.message?.tool_calls?.[0]?.function?.arguments) {
+        // Parse function calling response
+        responseText = choice.message.tool_calls[0].function.arguments
+      }
+
+      newIds.conversationId = response.id
     } catch (e: unknown) {
-      info(`response: ${response}, failed to send message to bedrock: ${e}`)
+      info(`failed to send message to DeepSeek: ${e}`)
     }
+
     const end = Date.now()
     info(
-      `bedrock sendMessage (including retries) response time: ${end - start} ms`
+      `DeepSeek sendMessage (including retries) response time: ${end - start} ms`
     )
 
-    let responseText = ''
-    if (response?.output?.message != null) {
-      // Check if the response contains a tool use (JSON output)
-      const content = response.output.message.content || []
-      for (const item of content) {
-        if (item.text) {
-          responseText += item.text
-        } else if (item.toolUse) {
-          // For JSON schema tool use, the input will contain the generated JSON
-          try {
-            responseText = JSON.stringify(item.toolUse.input)
-          } catch (e) {
-            warning(`Failed to parse tool use input as JSON: ${e}`)
-            responseText = ''
-          }
-        }
-      }
-    } else {
-      warning('bedrock response is null')
-    }
     if (this.options.debug) {
-      info(`bedrock responses: ${responseText}\n-----------`)
+      info(`DeepSeek responses: ${responseText}\n-----------`)
     }
-    const newIds: Ids = {
-      parentMessageId: response?.$metadata.requestId,
-      conversationId: response?.$metadata.cfId
-    }
+
     return [responseText, newIds]
   }
 }

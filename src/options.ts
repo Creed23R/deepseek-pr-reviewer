@@ -13,12 +13,11 @@ export class Options {
   pathFilters: PathFilter
   systemMessage: string
   reviewFileDiff: string
-  bedrockLightModel: string
-  bedrockHeavyModel: string
-  bedrockModelTemperature: number
-  bedrockRetries: number
-  bedrockTimeoutMS: number
-  bedrockConcurrencyLimit: number
+  deepseekLightModel: string
+  deepseekHeavyModel: string
+  deepseekModelTemperature: number
+  deepseekRetries: number
+  deepseekConcurrencyLimit: number
   githubConcurrencyLimit: number
   lightTokenLimits: TokenLimits
   heavyTokenLimits: TokenLimits
@@ -36,12 +35,11 @@ export class Options {
     pathFilters: string[] | null = null,
     systemMessage = '',
     reviewFileDiff = '',
-    bedrockLightModel: string,
-    bedrockHeavyModel: string,
-    bedrockModelTemperature = '0.0',
-    bedrockRetries = '3',
-    bedrockTimeoutMS = '120000',
-    bedrockConcurrencyLimit = '6',
+    deepseekLightModel: string,
+    deepseekHeavyModel: string,
+    deepseekModelTemperature = '0.0',
+    deepseekRetries = '3',
+    deepseekConcurrencyLimit = '6',
     githubConcurrencyLimit = '6',
     language = 'en-US',
     ignoreKeyword = '/reviewbot: ignore'
@@ -56,15 +54,14 @@ export class Options {
     this.pathFilters = new PathFilter(pathFilters)
     this.systemMessage = systemMessage
     this.reviewFileDiff = reviewFileDiff
-    this.bedrockLightModel = bedrockLightModel
-    this.bedrockHeavyModel = bedrockHeavyModel
-    this.bedrockModelTemperature = parseFloat(bedrockModelTemperature)
-    this.bedrockRetries = parseInt(bedrockRetries)
-    this.bedrockTimeoutMS = parseInt(bedrockTimeoutMS)
-    this.bedrockConcurrencyLimit = parseInt(bedrockConcurrencyLimit)
+    this.deepseekLightModel = deepseekLightModel
+    this.deepseekHeavyModel = deepseekHeavyModel
+    this.deepseekModelTemperature = parseFloat(deepseekModelTemperature)
+    this.deepseekRetries = parseInt(deepseekRetries)
+    this.deepseekConcurrencyLimit = parseInt(deepseekConcurrencyLimit)
     this.githubConcurrencyLimit = parseInt(githubConcurrencyLimit)
-    this.lightTokenLimits = new TokenLimits(bedrockLightModel)
-    this.heavyTokenLimits = new TokenLimits(bedrockHeavyModel)
+    this.lightTokenLimits = new TokenLimits(deepseekLightModel)
+    this.heavyTokenLimits = new TokenLimits(deepseekHeavyModel)
     this.language = language
     this.ignoreKeyword = ignoreKeyword
   }
@@ -81,12 +78,11 @@ export class Options {
     info(`path_filters: ${this.pathFilters}`)
     info(`system_message: ${this.systemMessage}`)
     info(`review_file_diff: ${this.reviewFileDiff}`)
-    info(`bedrock_light_model: ${this.bedrockLightModel}`)
-    info(`bedrock_heavy_model: ${this.bedrockHeavyModel}`)
-    info(`bedrock_model_temperature: ${this.bedrockModelTemperature}`)
-    info(`bedrock_retries: ${this.bedrockRetries}`)
-    info(`bedrock_timeout_ms: ${this.bedrockTimeoutMS}`)
-    info(`bedrock_concurrency_limit: ${this.bedrockConcurrencyLimit}`)
+    info(`deepseek_light_model: ${this.deepseekLightModel}`)
+    info(`deepseek_heavy_model: ${this.deepseekHeavyModel}`)
+    info(`deepseek_model_temperature: ${this.deepseekModelTemperature}`)
+    info(`deepseek_retries: ${this.deepseekRetries}`)
+    info(`deepseek_concurrency_limit: ${this.deepseekConcurrencyLimit}`)
     info(`github_concurrency_limit: ${this.githubConcurrencyLimit}`)
     info(`summary_token_limits: ${this.lightTokenLimits.string()}`)
     info(`review_token_limits: ${this.heavyTokenLimits.string()}`)
@@ -151,12 +147,12 @@ export class PathFilter {
   }
 }
 
-export class BedrockOptions {
+export class DeepSeekOptions {
   model: string
   tokenLimits: TokenLimits
 
   constructor(
-    model = 'anthropic.claude-instant-v1',
+    model = 'deepseek-chat',
     tokenLimits: TokenLimits | null = null
   ) {
     this.model = model

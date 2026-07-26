@@ -1,9 +1,9 @@
-# AI-based PR reviewer and summarizer w/ Amazon Bedrock Claude
-This is a modified version of [coderabbitai/ai-pr-reviewer](https://github.com/coderabbitai/ai-pr-reviewer) to use Amazon Bedrock instead.
+# AI-based PR reviewer and summarizer w/ DeepSeek API
+This is a modified version of [coderabbitai/ai-pr-reviewer](https://github.com/coderabbitai/ai-pr-reviewer) to use DeepSeek API instead of Bedrock or OpenAI.
 
 ## Overview
 
-`ai-pr-reviewer` is an AI-based code reviewer and summarizer for GitHub pull requests using Bedrock's Anthropic Claude models. It is designed to be used as a GitHub Action and can be configured to run on every pull request and review comments.
+`ai-pr-reviewer` is an AI-based code reviewer and summarizer for GitHub pull requests using DeepSeek's language models. It is designed to be used as a GitHub Action and can be configured to run on every pull request and review comments.
 
 ## Reviewer Features:
 
@@ -14,7 +14,7 @@ This is a modified version of [coderabbitai/ai-pr-reviewer](https://github.com/c
 - **Continuous, incremental reviews**: Reviews are performed on each commit
   within a pull request, rather than a one-time review on the entire pull
   request.
-- **Cost-effective and reduced noise**: Incremental reviews save on Bedrock costs
+- **Cost-effective and reduced noise**: Incremental reviews save on API costs
   and reduce noise by tracking changed files between commits and the base of the
   pull request.
 - **"Light" model for summary**: Designed to be used with a "light"
@@ -31,7 +31,7 @@ This is a modified version of [coderabbitai/ai-pr-reviewer](https://github.com/c
   process or even change the review objective.
 
 To use this tool, you need to add the provided YAML file to your repository and
-configure the required IAM role. For more information on usage, examples, contributing, and
+configure the required API key. For more information on usage, examples, contributing, and
 FAQs, you can refer to the sections below.
 
 - [Overview](#overview)
@@ -44,15 +44,14 @@ FAQs, you can refer to the sections below.
 
 ## Install instructions
 
-You have to create an IAM role first for authenticating Bedrock API. You can use [the CloudFormation template](docs/oidc-cfn.yaml) to create one. Please replace `SubjectClaimFilters` field value to allow access to your GitHub repository.
+You need a DeepSeek API key. You can get one at [platform.deepseek.com](https://platform.deepseek.com/).
 
-`ai-pr-reviewer` runs as a GitHub Action. Add the below file to your repository at `.github/workflows/ai-pr-reviewer.yml`. Please replace `role-to-assume` field value to the actual IAM role ARN created by the CloudFormation template.
+`ai-pr-reviewer` runs as a GitHub Action. Add the below file to your repository at `.github/workflows/ai-pr-reviewer.yml`.
 
 ```yaml
 name: Code Review
 
 permissions:
-  id-token: write
   contents: read
   pull-requests: write
 
@@ -72,28 +71,29 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::123456789012:role/YourOidcIamRole
-          role-session-name: gha-session
-          aws-region: us-east-1
       - name: PR review
-        uses: tmokmss/bedrock-pr-reviewer@v1
+        uses: your-username/deepseek-pr-reviewer@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         with:
           debug: false
           review_simple_changes: false
           review_comment_lgtm: false
-          bedrock_light_model: us.anthropic.claude-3-5-haiku-20241022-v1:0
-          bedrock_heavy_model: us.anthropic.claude-3-7-sonnet-20250219-v1:0
+          deepseek_light_model: deepseek-chat
+          deepseek_heavy_model: deepseek-reasoner
 ```
 
 #### Environment variables
 
 - `GITHUB_TOKEN`: This should already be available to the GitHub Action
   environment. This is used to add comments to the pull request.
+- `DEEPSEEK_API_KEY`: Use this to authenticate with DeepSeek API. You can get one at [platform.deepseek.com](https://platform.deepseek.com/). Please add this key to your GitHub Action secrets.
+
+### Models
+
+- `deepseek-chat`: Fast and cost-effective model for summarization tasks (default for light model)
+- `deepseek-reasoner`: More capable model with reasoning capabilities for code reviews (default for heavy model)
 
 ### Prompts & Configuration
 
@@ -108,7 +108,7 @@ value. For example, to review docs/blog posts, you can use the following prompt:
 ```yaml
 system_message: |
   You are `/reviewbot` (aka `github-actions[bot]`), a language model
-  trained by Bedrock. Your purpose is to act as a highly experienced
+  trained by DeepSeek. Your purpose is to act as a highly experienced
   DevRel (developer relations) professional with focus on cloud-native
   infrastructure.
 
@@ -224,16 +224,11 @@ jobs:
   review:
     runs-on: ubuntu-latest
     steps:
-      - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::123456789012:role/YourOidcIamRole
-          role-session-name: gha-session
-          aws-region: us-east-1
       - name: PR review
-        uses: tmokmss/bedrock-pr-reviewer@v1
+        uses: your-username/deepseek-pr-reviewer@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
         with:
           debug: false
           review_simple_changes: false
@@ -243,17 +238,17 @@ jobs:
 See also:
 https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request_target
 
-### Inspect the messages between Bedrock server
+### Inspect the messages between DeepSeek server
 
 Set `debug: true` in the workflow file to enable debug mode, which will show the
 messages
 
 ### Disclaimer
 
-- Your code (files, diff, PR title/description) will be sent to Bedrock's servers
+- Your code (files, diff, PR title/description) will be sent to DeepSeek's servers
   for processing. Please check with your compliance team before using this on
   your private code repositories.
-- This action is not affiliated with Bedrock.
+- This action is not affiliated with DeepSeek.
 
 ## Copyright notice
 Copyright for portions of project `ai-pr-reviewer` are held by [CodeRabbit](https://coderabbit.ai/) as part of project `bedrock-pr-reviewer`. See [CodeRabbit.LICENSE](./CodeRabbit.LICENSE) for the original license.

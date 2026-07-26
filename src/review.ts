@@ -30,7 +30,7 @@ export const codeReview = async (
 ): Promise<void> => {
   const commenter: Commenter = new Commenter()
 
-  const bedrockConcurrencyLimit = pLimit(options.bedrockConcurrencyLimit)
+  const deepseekConcurrencyLimit = pLimit(options.deepseekConcurrencyLimit)
   const githubConcurrencyLimit = pLimit(options.githubConcurrencyLimit)
 
   if (
@@ -340,8 +340,8 @@ ${
       const [summarizeResp] = await lightBot.chat(summarizePrompt)
 
       if (summarizeResp === '') {
-        info('summarize: nothing obtained from bedrock')
-        summariesFailed.push(`${filename} (nothing obtained from bedrock)`)
+        info('summarize: nothing obtained from DeepSeek')
+        summariesFailed.push(`${filename} (nothing obtained from DeepSeek)`)
         return null
       } else {
         if (options.reviewSimpleChanges === false) {
@@ -364,8 +364,8 @@ ${
         return [filename, summarizeResp, true]
       }
     } catch (e: any) {
-      warning(`summarize: error from bedrock: ${e as string}`)
-      summariesFailed.push(`${filename} (error from bedrock: ${e as string})})`)
+      warning(`summarize: error from DeepSeek: ${e as string}`)
+      summariesFailed.push(`${filename} (error from DeepSeek: ${e as string})})`)
       return null
     }
   }
@@ -375,7 +375,7 @@ ${
   for (const [filename, fileContent, fileDiff] of filesAndChanges) {
     if (options.maxFiles <= 0 || summaryPromises.length < options.maxFiles) {
       summaryPromises.push(
-        bedrockConcurrencyLimit(
+        deepseekConcurrencyLimit(
           async () => await doSummary(filename, fileContent, fileDiff)
         )
       )
@@ -404,7 +404,7 @@ ${filename}: ${summary}
         prompts.renderSummarizeChangesets(inputs)
       )
       if (summarizeResp === '') {
-        warning('summarize: nothing obtained from bedrock')
+        warning('summarize: nothing obtained from DeepSeek')
       } else {
         inputs.rawSummary = summarizeResp
       }
@@ -416,7 +416,7 @@ ${filename}: ${summary}
     prompts.renderSummarize(inputs)
   )
   if (summarizeFinalResponse === '') {
-    info('summarize: nothing obtained from bedrock')
+    info('summarize: nothing obtained from DeepSeek')
   }
 
   if (options.disableReleaseNotes === false) {
@@ -425,7 +425,7 @@ ${filename}: ${summary}
       prompts.renderSummarizeReleaseNotes(inputs)
     )
     if (releaseNotesResponse === '') {
-      info('release notes: nothing obtained from bedrock')
+      info('release notes: nothing obtained from DeepSeek')
     } else {
       let message = '### Summary (generated)\n\n'
       message += releaseNotesResponse
@@ -630,7 +630,7 @@ ${commentChain}
             reviewJsonSchema
           )
           if (response === '') {
-            info('review: nothing obtained from bedrock')
+            info('review: nothing obtained from DeepSeek')
             reviewsFailed.push(`${filename} (no response)`)
             return
           }
@@ -680,7 +680,7 @@ ${commentChain}
     for (const [filename, fileContent, , patches] of filesAndChangesReview) {
       if (options.maxFiles <= 0 || reviewPromises.length < options.maxFiles) {
         reviewPromises.push(
-          bedrockConcurrencyLimit(async () => {
+          deepseekConcurrencyLimit(async () => {
             await doReview(filename, fileContent, patches)
           })
         )

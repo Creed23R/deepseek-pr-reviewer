@@ -1,4 +1,4 @@
-name: 'AI-based PR Reviewer & Summarizer with Chat Capabilities (Bedrock Claude)'
+name: 'AI-based PR Reviewer & Summarizer with Chat Capabilities (DeepSeek)'
 description: 'AI-based PR Reviewer & Summarizer with Chat Capabilities'
 branding:
   icon: 'git-merge'
@@ -25,7 +25,7 @@ inputs:
     default: 'false'
   only_allow_collaborator:
     required: false
-    description: 'Allow Bedrock access only for collaborators'
+    description: 'Allow DeepSeek access only for collaborators'
     default: 'false'
   path_filters:
     required: false
@@ -148,31 +148,27 @@ inputs:
     required: false
     description: 'Disable release notes'
     default: 'false'
-  bedrock_light_model:
+  deepseek_light_model:
     required: false
     description:
       'Model to use for simple tasks like summarizing diff on a file.'
-    default: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0'
-  bedrock_heavy_model:
+    default: 'deepseek-chat'
+  deepseek_heavy_model:
     required: false
     description: 'Model to use for complex tasks such as code reviews.'
-    default: 'us.anthropic.claude-3-7-sonnet-20250219-v1:0'
-  bedrock_model_temperature:
+    default: 'deepseek-reasoner'
+  deepseek_model_temperature:
     required: false
-    description: 'Temperature for GPT model'
+    description: 'Temperature for DeepSeek model'
     default: '0.05'
-  bedrock_retries:
+  deepseek_retries:
     required: false
     description:
-      'How many times to retry Bedrock API in case of timeouts or errors?'
+      'How many times to retry DeepSeek API in case of timeouts or errors?'
     default: '10'
-  bedrock_timeout_ms:
+  deepseek_concurrency_limit:
     required: false
-    description: 'Timeout for Bedrock API call in millis'
-    default: '360000'
-  bedrock_concurrency_limit:
-    required: false
-    description: 'How many concurrent API calls to make to Bedrock servers?'
+    description: 'How many concurrent API calls to make to DeepSeek servers?'
     default: '2'
   github_concurrency_limit:
     required: false
@@ -180,10 +176,10 @@ inputs:
     default: '6'
   system_message:
     required: false
-    description: 'System message to be sent to Bedrock'
+    description: 'System message to be sent to DeepSeek'
     default: |
       You are `/reviewbot` (aka `github-actions[bot]`), a language model 
-      trained by Bedrock. Your purpose is to act as a highly experienced 
+      trained by DeepSeek. Your purpose is to act as a highly experienced 
       software engineer and provide a thorough review of the code, related documents, and articles
       and suggest code snippets to improve these with various aspects.
 

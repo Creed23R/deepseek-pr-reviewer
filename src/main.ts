@@ -6,7 +6,7 @@ import {
   warning
 } from '@actions/core'
 import {Bot} from './bot'
-import {BedrockOptions, Options} from './options'
+import {DeepSeekOptions, Options} from './options'
 import {Prompts} from './prompts'
 import {codeReview} from './review'
 import {handleReviewComment} from './review-comment'
@@ -24,12 +24,11 @@ async function run(): Promise<void> {
     getMultilineInput('path_filters'),
     getInput('system_message'),
     getInput('review_file_diff'),
-    getInput('bedrock_light_model'),
-    getInput('bedrock_heavy_model'),
-    getInput('bedrock_model_temperature'),
-    getInput('bedrock_retries'),
-    getInput('bedrock_timeout_ms'),
-    getInput('bedrock_concurrency_limit'),
+    getInput('deepseek_light_model'),
+    getInput('deepseek_heavy_model'),
+    getInput('deepseek_model_temperature'),
+    getInput('deepseek_retries'),
+    getInput('deepseek_concurrency_limit'),
     getInput('github_concurrency_limit'),
     getInput('language'),
     getInput('ignore_keyword')
@@ -49,11 +48,11 @@ async function run(): Promise<void> {
   try {
     lightBot = new Bot(
       options,
-      new BedrockOptions(options.bedrockLightModel, options.lightTokenLimits)
+      new DeepSeekOptions(options.deepseekLightModel, options.lightTokenLimits)
     )
   } catch (e: any) {
     warning(
-      `Skipped: failed to create summary bot, please check your bedrock_api_key: ${e}, backtrace: ${e.stack}`
+      `Skipped: failed to create summary bot, please check your DEEPSEEK_API_KEY: ${e}, backtrace: ${e.stack}`
     )
     return
   }
@@ -62,11 +61,11 @@ async function run(): Promise<void> {
   try {
     heavyBot = new Bot(
       options,
-      new BedrockOptions(options.bedrockHeavyModel, options.heavyTokenLimits)
+      new DeepSeekOptions(options.deepseekHeavyModel, options.heavyTokenLimits)
     )
   } catch (e: any) {
     warning(
-      `Skipped: failed to create review bot, please check your bedrock_api_key: ${e}, backtrace: ${e.stack}`
+      `Skipped: failed to create review bot, please check your DEEPSEEK_API_KEY: ${e}, backtrace: ${e.stack}`
     )
     return
   }

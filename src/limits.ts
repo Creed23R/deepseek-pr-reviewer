@@ -3,16 +3,18 @@ export class TokenLimits {
   requestTokens: number
   responseTokens: number
 
-  constructor(model = 'anthropic.claude-instant-v1') {
-    if (model === 'anthropic.claude-instant-v1') {
-      this.maxTokens = 100_000
+  constructor(model = 'deepseek-chat') {
+    if (model === 'deepseek-chat') {
+      // DeepSeek-V3: 64K context
+      this.maxTokens = 64_000
       this.responseTokens = 4000
-    } else if (model === 'anthropic.claude-v2') {
-      this.maxTokens = 100_000
-      this.responseTokens = 3000
+    } else if (model === 'deepseek-reasoner') {
+      // DeepSeek-R1: 64K context
+      this.maxTokens = 64_000
+      this.responseTokens = 4000
     } else {
-      // The latest models usually have this level of limits.
-      this.maxTokens = 200_000
+      // Default for unknown models
+      this.maxTokens = 64_000
       this.responseTokens = 4096
     }
     // provide some margin for the request tokens
