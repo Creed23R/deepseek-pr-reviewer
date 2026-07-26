@@ -7944,7 +7944,10 @@ class Bot {
                         }
                     }
                 ];
-                params.tool_choice = { type: 'function', function: { name: jsonSchema.name } };
+                params.tool_choice = {
+                    type: 'function',
+                    function: { name: jsonSchema.name }
+                };
             }
             const response = await pRetry(() => this.client.chat.completions.create(params), {
                 retries: this.options.deepseekRetries,
@@ -7996,7 +7999,7 @@ class Bot {
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(5438);
 /* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _octokit__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(4793);
+/* harmony import */ var _octokit__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(3258);
 
 // eslint-disable-next-line camelcase
 
@@ -8809,282 +8812,22 @@ __webpack_async_result__();
 
 /***/ }),
 
-/***/ 4793:
+/***/ 3258:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
-
-// EXPORTS
-__nccwpck_require__.d(__webpack_exports__, {
-  "K": () => (/* binding */ octokit)
-});
-
-// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
-var core = __nccwpck_require__(2186);
-// EXTERNAL MODULE: ./node_modules/@octokit/action/dist-node/index.js
-var dist_node = __nccwpck_require__(1231);
-// EXTERNAL MODULE: ./node_modules/@octokit/plugin-retry/dist-node/index.js
-var plugin_retry_dist_node = __nccwpck_require__(6298);
-// EXTERNAL MODULE: ./node_modules/@vercel/ncc/dist/ncc/@@notfound.js?bottleneck/light.js
-var light = __nccwpck_require__(6150);
-;// CONCATENATED MODULE: ./node_modules/@octokit/plugin-throttling/dist-bundle/index.js
-// pkg/dist-src/index.js
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "K": () => (/* binding */ octokit)
+/* harmony export */ });
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2186);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _octokit_action__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(1231);
+/* harmony import */ var _octokit_action__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_action__WEBPACK_IMPORTED_MODULE_1__);
 
 
-// pkg/dist-src/version.js
-var VERSION = "0.0.0-development";
-
-// pkg/dist-src/wrap-request.js
-var noop = () => Promise.resolve();
-function wrapRequest(state, request, options) {
-  return state.retryLimiter.schedule(doRequest, state, request, options);
-}
-async function doRequest(state, request, options) {
-  const { pathname } = new URL(options.url, "http://github.test");
-  const isAuth = isAuthRequest(options.method, pathname);
-  const isWrite = !isAuth && options.method !== "GET" && options.method !== "HEAD";
-  const isSearch = options.method === "GET" && pathname.startsWith("/search/");
-  const isGraphQL = pathname.startsWith("/graphql");
-  const retryCount = ~~request.retryCount;
-  const jobOptions = retryCount > 0 ? { priority: 0, weight: 0 } : {};
-  if (state.clustering) {
-    jobOptions.expiration = 1e3 * 60;
-  }
-  if (isWrite || isGraphQL) {
-    await state.write.key(state.id).schedule(jobOptions, noop);
-  }
-  if (isWrite && state.triggersNotification(pathname)) {
-    await state.notifications.key(state.id).schedule(jobOptions, noop);
-  }
-  if (isSearch) {
-    await state.search.key(state.id).schedule(jobOptions, noop);
-  }
-  const req = (isAuth ? state.auth : state.global).key(state.id).schedule(jobOptions, request, options);
-  if (isGraphQL) {
-    const res = await req;
-    if (res.data.errors != null && res.data.errors.some((error) => error.type === "RATE_LIMITED")) {
-      const error = Object.assign(new Error("GraphQL Rate Limit Exceeded"), {
-        response: res,
-        data: res.data
-      });
-      throw error;
-    }
-  }
-  return req;
-}
-function isAuthRequest(method, pathname) {
-  return method === "PATCH" && // https://docs.github.com/en/rest/apps/apps?apiVersion=2022-11-28#create-a-scoped-access-token
-  /^\/applications\/[^/]+\/token\/scoped$/.test(pathname) || method === "POST" && // https://docs.github.com/en/rest/apps/oauth-applications?apiVersion=2022-11-28#reset-a-token
-  (/^\/applications\/[^/]+\/token$/.test(pathname) || // https://docs.github.com/en/rest/apps/apps?apiVersion=2022-11-28#create-an-installation-access-token-for-an-app
-  /^\/app\/installations\/[^/]+\/access_tokens$/.test(pathname) || // https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps
-  pathname === "/login/oauth/access_token");
-}
-
-// pkg/dist-src/generated/triggers-notification-paths.js
-var triggers_notification_paths_default = [
-  "/orgs/{org}/invitations",
-  "/orgs/{org}/invitations/{invitation_id}",
-  "/orgs/{org}/teams/{team_slug}/discussions",
-  "/orgs/{org}/teams/{team_slug}/discussions/{discussion_number}/comments",
-  "/repos/{owner}/{repo}/collaborators/{username}",
-  "/repos/{owner}/{repo}/commits/{commit_sha}/comments",
-  "/repos/{owner}/{repo}/issues",
-  "/repos/{owner}/{repo}/issues/{issue_number}/comments",
-  "/repos/{owner}/{repo}/issues/{issue_number}/sub_issue",
-  "/repos/{owner}/{repo}/issues/{issue_number}/sub_issues/priority",
-  "/repos/{owner}/{repo}/pulls",
-  "/repos/{owner}/{repo}/pulls/{pull_number}/comments",
-  "/repos/{owner}/{repo}/pulls/{pull_number}/comments/{comment_id}/replies",
-  "/repos/{owner}/{repo}/pulls/{pull_number}/merge",
-  "/repos/{owner}/{repo}/pulls/{pull_number}/requested_reviewers",
-  "/repos/{owner}/{repo}/pulls/{pull_number}/reviews",
-  "/repos/{owner}/{repo}/releases",
-  "/teams/{team_id}/discussions",
-  "/teams/{team_id}/discussions/{discussion_number}/comments"
-];
-
-// pkg/dist-src/route-matcher.js
-function routeMatcher(paths) {
-  const regexes = paths.map(
-    (path) => path.split("/").map((c) => c.startsWith("{") ? "(?:.+?)" : c).join("/")
-  );
-  const regex2 = `^(?:${regexes.map((r) => `(?:${r})`).join("|")})[^/]*$`;
-  return new RegExp(regex2, "i");
-}
-
-// pkg/dist-src/index.js
-var regex = routeMatcher(triggers_notification_paths_default);
-var triggersNotification = regex.test.bind(regex);
-var groups = {};
-var createGroups = function(Bottleneck, common) {
-  groups.global = new Bottleneck.Group({
-    id: "octokit-global",
-    maxConcurrent: 10,
-    ...common
-  });
-  groups.auth = new Bottleneck.Group({
-    id: "octokit-auth",
-    maxConcurrent: 1,
-    ...common
-  });
-  groups.search = new Bottleneck.Group({
-    id: "octokit-search",
-    maxConcurrent: 1,
-    minTime: 2e3,
-    ...common
-  });
-  groups.write = new Bottleneck.Group({
-    id: "octokit-write",
-    maxConcurrent: 1,
-    minTime: 1e3,
-    ...common
-  });
-  groups.notifications = new Bottleneck.Group({
-    id: "octokit-notifications",
-    maxConcurrent: 1,
-    minTime: 3e3,
-    ...common
-  });
-};
-function throttling(octokit, octokitOptions) {
-  const {
-    enabled = true,
-    Bottleneck = light,
-    id = "no-id",
-    timeout = 1e3 * 60 * 2,
-    // Redis TTL: 2 minutes
-    connection
-  } = octokitOptions.throttle || {};
-  if (!enabled) {
-    return {};
-  }
-  const common = { timeout };
-  if (typeof connection !== "undefined") {
-    common.connection = connection;
-  }
-  if (groups.global == null) {
-    createGroups(Bottleneck, common);
-  }
-  const state = Object.assign(
-    {
-      clustering: connection != null,
-      triggersNotification,
-      fallbackSecondaryRateRetryAfter: 60,
-      retryAfterBaseValue: 1e3,
-      retryLimiter: new Bottleneck(),
-      id,
-      ...groups
-    },
-    octokitOptions.throttle
-  );
-  if (typeof state.onSecondaryRateLimit !== "function" || typeof state.onRateLimit !== "function") {
-    throw new Error(`octokit/plugin-throttling error:
-        You must pass the onSecondaryRateLimit and onRateLimit error handlers.
-        See https://octokit.github.io/rest.js/#throttling
-
-        const octokit = new Octokit({
-          throttle: {
-            onSecondaryRateLimit: (retryAfter, options) => {/* ... */},
-            onRateLimit: (retryAfter, options) => {/* ... */}
-          }
-        })
-    `);
-  }
-  const events = {};
-  const emitter = new Bottleneck.Events(events);
-  events.on("secondary-limit", state.onSecondaryRateLimit);
-  events.on("rate-limit", state.onRateLimit);
-  events.on(
-    "error",
-    (e) => octokit.log.warn("Error in throttling-plugin limit handler", e)
-  );
-  state.retryLimiter.on("failed", async function(error, info) {
-    const [state2, request, options] = info.args;
-    const { pathname } = new URL(options.url, "http://github.test");
-    const shouldRetryGraphQL = pathname.startsWith("/graphql") && error.status !== 401;
-    if (!(shouldRetryGraphQL || error.status === 403 || error.status === 429)) {
-      return;
-    }
-    const retryCount = ~~request.retryCount;
-    request.retryCount = retryCount;
-    options.request.retryCount = retryCount;
-    const { wantRetry, retryAfter = 0 } = await async function() {
-      if (/\bsecondary rate\b/i.test(error.message)) {
-        const retryAfter2 = Number(error.response.headers["retry-after"]) || state2.fallbackSecondaryRateRetryAfter;
-        const wantRetry2 = await emitter.trigger(
-          "secondary-limit",
-          retryAfter2,
-          options,
-          octokit,
-          retryCount
-        );
-        return { wantRetry: wantRetry2, retryAfter: retryAfter2 };
-      }
-      if (error.response.headers != null && error.response.headers["x-ratelimit-remaining"] === "0" || (error.response.data?.errors ?? []).some(
-        (error2) => error2.type === "RATE_LIMITED"
-      )) {
-        const rateLimitReset = new Date(
-          ~~error.response.headers["x-ratelimit-reset"] * 1e3
-        ).getTime();
-        const retryAfter2 = Math.max(
-          // Add one second so we retry _after_ the reset time
-          // https://docs.github.com/en/rest/overview/resources-in-the-rest-api?apiVersion=2022-11-28#exceeding-the-rate-limit
-          Math.ceil((rateLimitReset - Date.now()) / 1e3) + 1,
-          0
-        );
-        const wantRetry2 = await emitter.trigger(
-          "rate-limit",
-          retryAfter2,
-          options,
-          octokit,
-          retryCount
-        );
-        return { wantRetry: wantRetry2, retryAfter: retryAfter2 };
-      }
-      return {};
-    }();
-    if (wantRetry) {
-      request.retryCount++;
-      return retryAfter * state2.retryAfterBaseValue;
-    }
-  });
-  octokit.hook.wrap("request", wrapRequest.bind(null, state));
-  return {};
-}
-throttling.VERSION = VERSION;
-throttling.triggersNotification = triggersNotification;
-
-
-;// CONCATENATED MODULE: ./lib/octokit.js
-
-
-
-
-const token = (0,core.getInput)('token') || process.env.GITHUB_TOKEN;
-const RetryAndThrottlingOctokit = dist_node.Octokit.plugin(throttling, plugin_retry_dist_node/* retry */.XD);
-const octokit = new RetryAndThrottlingOctokit({
-    auth: `token ${token}`,
-    throttle: {
-        onRateLimit: (retryAfter, options, _o, retryCount) => {
-            (0,core.warning)(`Request quota exhausted for request ${options.method} ${options.url}
-Retry after: ${retryAfter} seconds
-Retry count: ${retryCount}
-`);
-            if (retryCount <= 3) {
-                (0,core.warning)(`Retrying after ${retryAfter} seconds!`);
-                return true;
-            }
-        },
-        onSecondaryRateLimit: (retryAfter, options) => {
-            (0,core.warning)(`SecondaryRateLimit detected for request ${options.method} ${options.url} ; retry after ${retryAfter} seconds`);
-            // if we are doing a POST method on /repos/{owner}/{repo}/pulls/{pull_number}/reviews then we shouldn't retry
-            if (options.method === 'POST' &&
-                options.url.match(/\/repos\/.*\/.*\/pulls\/.*\/reviews/)) {
-                return false;
-            }
-            return true;
-        }
-    }
+const token = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('token') || process.env.GITHUB_TOKEN;
+const octokit = new _octokit_action__WEBPACK_IMPORTED_MODULE_1__.Octokit({
+    auth: `token ${token}`
 });
 
 
@@ -11075,7 +10818,7 @@ class DeepSeekOptions {
 /* harmony export */ });
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2186);
 /* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _octokit__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(4793);
+/* harmony import */ var _octokit__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(3258);
 
 
 // https://stackoverflow.com/questions/27883893/github-api-how-to-check-if-user-has-write-access-to-a-repository
@@ -11346,7 +11089,7 @@ $comment
 /* harmony import */ var _actions_github__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__nccwpck_require__.n(_actions_github__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _commenter__WEBPACK_IMPORTED_MODULE_2__ = __nccwpck_require__(3339);
 /* harmony import */ var _inputs__WEBPACK_IMPORTED_MODULE_5__ = __nccwpck_require__(6180);
-/* harmony import */ var _octokit__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(4793);
+/* harmony import */ var _octokit__WEBPACK_IMPORTED_MODULE_3__ = __nccwpck_require__(3258);
 /* harmony import */ var _tokenizer__WEBPACK_IMPORTED_MODULE_4__ = __nccwpck_require__(652);
 
 // eslint-disable-next-line camelcase
@@ -11641,8 +11384,8 @@ function pLimit(concurrency) {
 var lib_commenter = __nccwpck_require__(3339);
 // EXTERNAL MODULE: ./lib/inputs.js
 var lib_inputs = __nccwpck_require__(6180);
-// EXTERNAL MODULE: ./lib/octokit.js + 1 modules
-var octokit = __nccwpck_require__(4793);
+// EXTERNAL MODULE: ./lib/octokit.js
+var octokit = __nccwpck_require__(3258);
 // EXTERNAL MODULE: ./lib/tokenizer.js
 var tokenizer = __nccwpck_require__(652);
 ;// CONCATENATED MODULE: ./lib/review.js
@@ -44234,97 +43977,6 @@ var createTokenAuth = function createTokenAuth2(token) {
 };
 // Annotate the CommonJS export names for ESM import in node:
 0 && (0);
-
-
-/***/ }),
-
-/***/ 6298:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-var __webpack_unused_export__;
-
-
-__webpack_unused_export__ = ({ value: true });
-
-function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
-
-var Bottleneck = _interopDefault(__nccwpck_require__(5248));
-var requestError = __nccwpck_require__(6999);
-
-// @ts-ignore
-async function errorRequest(state, octokit, error, options) {
-  if (!error.request || !error.request.request) {
-    // address https://github.com/octokit/plugin-retry.js/issues/8
-    throw error;
-  }
-  // retry all >= 400 && not doNotRetry
-  if (error.status >= 400 && !state.doNotRetry.includes(error.status)) {
-    const retries = options.request.retries != null ? options.request.retries : state.retries;
-    const retryAfter = Math.pow((options.request.retryCount || 0) + 1, 2);
-    throw octokit.retry.retryRequest(error, retries, retryAfter);
-  }
-  // Maybe eventually there will be more cases here
-  throw error;
-}
-
-// @ts-nocheck
-async function wrapRequest(state, octokit, request, options) {
-  const limiter = new Bottleneck();
-  limiter.on("failed", function (error, info) {
-    const maxRetries = ~~error.request.request.retries;
-    const after = ~~error.request.request.retryAfter;
-    options.request.retryCount = info.retryCount + 1;
-    if (maxRetries > info.retryCount) {
-      // Returning a number instructs the limiter to retry
-      // the request after that number of milliseconds have passed
-      return after * state.retryAfterBaseValue;
-    }
-  });
-  return limiter.schedule(requestWithGraphqlErrorHandling.bind(null, state, octokit, request), options);
-}
-async function requestWithGraphqlErrorHandling(state, octokit, request, options) {
-  const response = await request(request, options);
-  if (response.data && response.data.errors && /Something went wrong while executing your query/.test(response.data.errors[0].message)) {
-    // simulate 500 request error for retry handling
-    const error = new requestError.RequestError(response.data.errors[0].message, 500, {
-      request: options,
-      response
-    });
-    return errorRequest(state, octokit, error, options);
-  }
-  return response;
-}
-
-const VERSION = "4.1.3";
-function retry(octokit, octokitOptions) {
-  const state = Object.assign({
-    enabled: true,
-    retryAfterBaseValue: 1000,
-    doNotRetry: [400, 401, 403, 404, 422],
-    retries: 3
-  }, octokitOptions.retry);
-  if (state.enabled) {
-    octokit.hook.error("request", errorRequest.bind(null, state, octokit));
-    octokit.hook.wrap("request", wrapRequest.bind(null, state, octokit));
-  }
-  return {
-    retry: {
-      retryRequest: (error, retries, retryAfter) => {
-        error.request.request = Object.assign({}, error.request.request, {
-          retries: retries,
-          retryAfter: retryAfter
-        });
-        return error;
-      }
-    }
-  };
-}
-retry.VERSION = VERSION;
-
-__webpack_unused_export__ = VERSION;
-exports.XD = retry;
-//# sourceMappingURL=index.js.map
 
 
 /***/ }),
@@ -78958,22 +78610,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 5248:
-/***/ ((module) => {
-
-module.exports = eval("require")("bottleneck/light");
-
-
-/***/ }),
-
-/***/ 6150:
-/***/ ((module) => {
-
-module.exports = eval("require")("bottleneck/light.js");
-
-
-/***/ }),
-
 /***/ 2877:
 /***/ ((module) => {
 
@@ -81450,56 +81086,6 @@ module.exports.__wbindgen_throw = function(arg0, arg1) {
     throw new Error(getStringFromWasm0(arg0, arg1));
 };
 ;
-
-
-
-/***/ }),
-
-/***/ 6999:
-/***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "RequestError": () => (/* binding */ RequestError)
-/* harmony export */ });
-class RequestError extends Error {
-  name;
-  /**
-   * http status code
-   */
-  status;
-  /**
-   * Request options that lead to the error.
-   */
-  request;
-  /**
-   * Response object if a response was received
-   */
-  response;
-  constructor(message, statusCode, options) {
-    super(message);
-    this.name = "HttpError";
-    this.status = Number.parseInt(statusCode);
-    if (Number.isNaN(this.status)) {
-      this.status = 0;
-    }
-    if ("response" in options) {
-      this.response = options.response;
-    }
-    const requestCopy = Object.assign({}, options.request);
-    if (options.request.headers.authorization) {
-      requestCopy.headers = Object.assign({}, options.request.headers, {
-        authorization: options.request.headers.authorization.replace(
-          /(?<! ) .*$/,
-          " [REDACTED]"
-        )
-      });
-    }
-    requestCopy.url = requestCopy.url.replace(/\bclient_secret=\w+/g, "client_secret=[REDACTED]").replace(/\baccess_token=\w+/g, "access_token=[REDACTED]");
-    this.request = requestCopy;
-  }
-}
 
 
 
