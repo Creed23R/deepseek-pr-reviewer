@@ -85,10 +85,8 @@ export class Bot {
             }
           }
         ]
-        params.tool_choice = {
-          type: 'function',
-          function: {name: jsonSchema.name}
-        }
+        // Don't force tool_choice - let DeepSeek decide
+        // This is faster and more reliable than forcing it
       }
 
       const response = await pRetry(
@@ -113,7 +111,8 @@ export class Bot {
 
       newIds.conversationId = response.id
     } catch (e: unknown) {
-      info(`failed to send message to DeepSeek: ${e}`)
+      const errMsg = e instanceof Error ? e.message : String(e)
+      warning(`failed to send message to DeepSeek: ${errMsg}`)
     }
 
     const end = Date.now()

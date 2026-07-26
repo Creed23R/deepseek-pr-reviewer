@@ -7944,10 +7944,8 @@ class Bot {
                         }
                     }
                 ];
-                params.tool_choice = {
-                    type: 'function',
-                    function: { name: jsonSchema.name }
-                };
+                // Don't force tool_choice - let DeepSeek decide
+                // This is faster and more reliable than forcing it
             }
             const response = await pRetry(() => this.client.chat.completions.create(params), {
                 retries: this.options.deepseekRetries,
@@ -7966,7 +7964,8 @@ class Bot {
             newIds.conversationId = response.id;
         }
         catch (e) {
-            (0,core.info)(`failed to send message to DeepSeek: ${e}`);
+            const errMsg = e instanceof Error ? e.message : String(e);
+            (0,core.warning)(`failed to send message to DeepSeek: ${errMsg}`);
         }
         const end = Date.now();
         (0,core.info)(`DeepSeek sendMessage (including retries) response time: ${end - start} ms`);
