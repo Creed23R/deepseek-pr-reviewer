@@ -152,11 +152,11 @@ inputs:
     required: false
     description:
       'Model to use for simple tasks like summarizing diff on a file.'
-    default: 'deepseek-chat'
+    default: 'deepseek-v4-flash'
   deepseek_heavy_model:
     required: false
     description: 'Model to use for complex tasks such as code reviews.'
-    default: 'deepseek-chat'
+    default: 'deepseek-v4-pro'
   deepseek_model_temperature:
     required: false
     description: 'Temperature for DeepSeek model'

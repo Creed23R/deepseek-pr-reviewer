@@ -10646,14 +10646,14 @@ class TokenLimits {
     maxTokens;
     requestTokens;
     responseTokens;
-    constructor(model = 'deepseek-chat') {
-        if (model === 'deepseek-chat') {
-            // DeepSeek-V3: 64K context
+    constructor(model = 'deepseek-v4-flash') {
+        if (model === 'deepseek-v4-flash') {
+            // DeepSeek-V4 Flash: fast and efficient
             this.maxTokens = 64_000;
             this.responseTokens = 4000;
         }
-        else if (model === 'deepseek-reasoner') {
-            // DeepSeek-R1: 64K context
+        else if (model === 'deepseek-v4-pro') {
+            // DeepSeek-V4 Pro: more capable
             this.maxTokens = 64_000;
             this.responseTokens = 4000;
         }
