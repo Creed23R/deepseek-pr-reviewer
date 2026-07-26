@@ -156,7 +156,7 @@ inputs:
   deepseek_heavy_model:
     required: false
     description: 'Model to use for complex tasks such as code reviews.'
-    default: 'deepseek-reasoner'
+    default: 'deepseek-chat'
   deepseek_model_temperature:
     required: false
     description: 'Temperature for DeepSeek model'
