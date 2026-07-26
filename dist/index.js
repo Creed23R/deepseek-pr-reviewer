@@ -8165,7 +8165,7 @@ ${COMMENT_TAG}`;
             (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.warning)(`Failed to list reviews: ${e}`);
         }
     }
-    async submitReview(pullNumber, commitId, statusMsg) {
+    async submitReview(pullNumber, commitId, statusMsg, event = 'COMMENT') {
         const body = `${COMMENT_GREETING}
 
 ${statusMsg}
@@ -8181,7 +8181,7 @@ ${statusMsg}
                     pull_number: pullNumber,
                     // eslint-disable-next-line camelcase
                     commit_id: commitId,
-                    event: 'COMMENT',
+                    event,
                     body
                 });
             }
@@ -8242,7 +8242,7 @@ ${statusMsg}
                 pull_number: pullNumber,
                 // eslint-disable-next-line camelcase
                 review_id: review.data.id,
-                event: 'COMMENT',
+                event,
                 body
             });
         }
@@ -11938,8 +11938,10 @@ ${reviewsSkipped.length > 0
 `;
         // add existing_comment_ids_block with latest head sha
         summarizeComment += `\n${commenter.addReviewedCommitId(existingCommitIdsBlock, context.payload.pull_request.head.sha)}`;
+        // Determine review event: REQUEST_CHANGES if there are issues, APPROVE if clean
+        const reviewEvent = reviewCount > 0 ? 'REQUEST_CHANGES' : 'APPROVE';
         // post the review
-        await commenter.submitReview(context.payload.pull_request.number, commits[commits.length - 1].sha, statusMsg);
+        await commenter.submitReview(context.payload.pull_request.number, commits[commits.length - 1].sha, statusMsg, reviewEvent);
     }
     // post the final summary comment
     await commenter.comment(`${summarizeComment}`, lib_commenter/* SUMMARIZE_TAG */.Rp, 'replace');

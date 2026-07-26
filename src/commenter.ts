@@ -233,7 +233,12 @@ ${COMMENT_TAG}`
     }
   }
 
-  async submitReview(pullNumber: number, commitId: string, statusMsg: string) {
+  async submitReview(
+    pullNumber: number,
+    commitId: string,
+    statusMsg: string,
+    event: 'COMMENT' | 'APPROVE' | 'REQUEST_CHANGES' = 'COMMENT'
+  ) {
     const body = `${COMMENT_GREETING}
 
 ${statusMsg}
@@ -250,7 +255,7 @@ ${statusMsg}
           pull_number: pullNumber,
           // eslint-disable-next-line camelcase
           commit_id: commitId,
-          event: 'COMMENT',
+          event,
           body
         })
       } catch (e) {
@@ -332,7 +337,7 @@ ${statusMsg}
         pull_number: pullNumber,
         // eslint-disable-next-line camelcase
         review_id: review.data.id,
-        event: 'COMMENT',
+        event,
         body
       })
     } catch (e) {
